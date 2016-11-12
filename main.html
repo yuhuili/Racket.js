@@ -33,7 +33,11 @@ var builtInFuncInf = ["+", "-", "/", "*"];
 var builtInFuncBin = ["remainder", "quotient"];
 var steps = [];
 var firstStep = 0;
-  
+
+function e(block) {
+  return myProcess(block);
+}
+
 function myProcess(block){
   var result = process(block, "", "");
   if (result != null){
@@ -271,7 +275,7 @@ function process(block, frontTxt, backTxt) {
               
               addStep(frontTxt + rawBody + backTxt);
               
-              return process(rawBody);
+              return process(rawBody, frontTxt, backTxt);
               break;
           }
         }
@@ -466,7 +470,7 @@ function addStep (step){
   if (steps.length == 0){
     steps.push(step);
   }
-  else if (steps[firstStep] != step){
+  else if (steps[firstStep] != step && steps[steps.length-1] != step){
     steps.push(step);
   }
 }
