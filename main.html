@@ -16,7 +16,8 @@ var BlockType = {
   BUILTINBIN: 3,
   BUILTININF: 4,
   FUNC: 5,
-  LIST: 6
+  LIST: 6,
+  LISTFUNC: 7
 };
 
 var ProgressStage = {
@@ -32,6 +33,7 @@ var definitions = {};
 var functions = {};
 var builtInFuncInf = ["+", "-", "/", "*"];
 var builtInFuncBin = ["remainder", "quotient"];
+var listBuiltIn = ["first", "second", "rest"];
 var steps = [];
 //var firstStep = 0;
 
@@ -100,6 +102,10 @@ function process(block, frontTxt, backTxt, firstStep) {
               thisProgressStage = ProgressStage.ARGUMENT;
               numberOfArguments = -1;
               thisBlockType = BlockType.LIST;
+            } else if (listBuiltIn.indexOf(operator) > -1){
+              thisProgressStage = ProgressStage.ARGUMENT;
+              numberOfArguments = 1;
+              thisBlockType = BlockType.LISTFUNC;
             } else if (builtInFuncBin.indexOf(operator) > -1) {
               thisBlockType = BlockType.BUILTINBIN;
               thisProgressStage = ProgressStage.ARGUMENT;
@@ -285,6 +291,9 @@ function process(block, frontTxt, backTxt, firstStep) {
               
               return constructList(arguments);
               break;
+            case BlockType.LISTFUNC:
+              return processListFunc(operator, arguments[0]);
+              break;  
           }
         }
         break;
@@ -419,6 +428,62 @@ function processBuiltInInf(operator, arguments){
     }
     
     return base;
+  }
+}
+function processListFunc(operator, list){
+  var numOpenBrack = 0;
+  var currentElem = 0;
+  var elements=[]; //First element has to be list
+  if (operator == "first"){
+    for (var i = 1; i < list.length-1; i++){
+      if (currentElem == elements.length){
+        elements[currentElem] = "";
+      }
+      var c = list[i];
+      if (c == " "){
+        if (elements[currentElem].length == 0){
+          continue;
+        } else if (numOpenBrack == 0){
+          if (currentElem == 1){
+            console.log(elements[1]);
+            return elements[1];
+          }
+          currentElem++;
+        } else {
+          elements[currentElem] += c;
+        }
+      }else if ( c == "("){
+        elements[currentElem] += c;
+        numOpenBrack++;
+      }else if (c == ")"){
+        numOpenBrack--;
+        elements[currentElem] += c;
+        if (i == list.length-1){
+          if (numOpenBrack != 0){
+            throw "Syntax Error";
+          } else {
+            if (elements.length == 1){
+              throw "first list given empty";
+            } else {
+              return elements[1];
+            }
+          }
+        }
+      }else {
+        if (i == list.length-1){
+          if (elements.length == 1){
+            throw "first list given empty";
+          } else {
+            return elements[1];
+          }
+        }
+        elements[currentElem] += c;
+      }
+    }
+  } else if (operator == "second"){
+    
+  } else if (operator == "rest"){
+    
   }
 }
 // consumes a variable and finds value associated with varialbe
