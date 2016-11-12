@@ -46,7 +46,7 @@ function process(block) {
   var currentArgument = 0;
   var numberOfArguments = 0;
   
-  
+  var numOpenBrack = 0;
   for (var i = 0, s = block.length; i<s; i++) {
     
     var c = block[i];
@@ -117,15 +117,32 @@ function process(block) {
         if (c==" ") {
           if (arguments[currentArgument].length==0) {
             continue;
+          } else if (numOpenBrack > 0) {
+            arguments[currentArgument] += c;
           } else {
-            
+            console.log("currentarg" + arguments[currentArgument]);
             // TO DO: CHECK IF VALUE, IF NOT EVALUATE IT
+            if (arguments[currentArgument][0] == "("){
+              arguments[currentArgument] = process(arguments[currentArgument]);
+            }
             currentArgument++;
             numberOfArguments--;
           }
+        } else if (c == "(") {
+            numOpenBrack++;
+            arguments[currentArgument] += c;
         } else if (c==")") {
-          i--;
-          thisProgressStage = ProgressStage.CLOSEBRACKET;
+          if (numOpenBrack > 0){
+            numOpenBrack--;
+            arguments[currentArgument] += c;
+          }else { 
+            console.log(arguments[currentArgument]);
+            if (arguments[currentArgument][0] == "("){
+              arguments[currentArgument] = process(arguments[currentArgument]);
+            }
+            i--;
+            thisProgressStage = ProgressStage.CLOSEBRACKET;
+          }
         } else {
           arguments[currentArgument] += c;
         }
@@ -140,7 +157,8 @@ function process(block) {
         } else {
           switch (thisBlockType){
             case BlockType.DEFINE:
-              definitions[identifier] = (arguments[0].indexOf(".") > -1) ? parseFloat(arguments[0]) : parseInt(arguments[0]);
+              console.log("-"+ arguments[0]);
+              definitions[identifier] = !isNaN(arguments[0]) ? arguments[0] : ((arguments[0].indexOf(".") > -1) ? parseFloat(arguments[0]) : parseInt(arguments[0]));
               shouldExit = true;
               break;
             case BlockType.BUILTINBIN:
