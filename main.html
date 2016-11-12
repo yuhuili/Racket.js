@@ -1,0 +1,150 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Untitled Document</title>
+</head>
+
+<body>
+
+<script>
+
+var BlockType = {
+  UNKNOWN: 0,
+  FUNC: 1
+};
+
+var ProgressStage = {
+  OPENBRACKET: 0,
+  OPERATOR: 1,
+  IDENTIFIER: 2,
+  ARGUMENT: 3,
+  CLOSEBRACKET: 4,
+  CLEANUP: 5
+}
+
+var rString = "(define x 4)";
+
+
+var definitions = {};
+
+
+function process(block) {
+  
+  var thisBlockType = BlockType.UNKNOWN;
+  var thisProgressStage = ProgressStage.OPENBRACKET;
+  
+  
+  var operator = "";
+  var identifier = "";
+  var arguments = [];
+  
+  var currentArgument = 0;
+  var numberOfArguments = 0;
+  
+  
+  for (var i = 0, s = block.length; i<s; i++) {
+    
+    var c = block[i];
+    
+    console.log(c);
+    console.log(thisProgressStage);
+    
+    var shouldExit = false;
+    
+    switch(thisProgressStage) {
+      case ProgressStage.OPENBRACKET:
+        if (c==" ") {
+          continue;
+        } else if (c!="(") {
+          throw "No Open Bracket";
+        } else {
+          thisProgressStage = ProgressStage.OPERATOR;
+        }
+        break;
+      case ProgressStage.OPERATOR:
+        if (c==" ") {
+          if (operator.length==0) {
+            continue;
+          } else {
+            
+            // Found operator
+            if (operator=="define") {
+              thisProgressStage = ProgressStage.IDENTIFIER;
+              numberOfArguments = 1;
+              
+              for (var j=0; j<numberOfArguments; j++) {
+                arguments[j]="";
+              }
+              
+            } else {
+              
+            }
+            
+          }
+        } else {
+          operator += c;
+        }
+        break;
+      case ProgressStage.IDENTIFIER:
+        if (c==" ") {
+          if (identifier.length==0) {
+            continue;
+          } else {
+            thisProgressStage = ProgressStage.ARGUMENT;
+          }
+        } else {
+          identifier += c;
+        }
+        break;
+      case ProgressStage.ARGUMENT:
+        
+        if (numberOfArguments==0) {
+          thisProgressStage = ProgressStage.CLOSEBRACKET;
+          break;
+        } 
+        
+        if (c==" ") {
+          if (arguments[currentArgument].length==0) {
+            continue;
+          } else {
+            
+            // TO DO: CHECK IF VALUE, IF NOT EVALUATE IT
+            currentArgument++;
+            numberOfArguments--;
+          }
+        } else if (c==")") {
+          i--;
+          thisProgressStage = ProgressStage.CLOSEBRACKET;
+        } else {
+          arguments[currentArgument] += c;
+        }
+        
+        
+        break;
+      case ProgressStage.CLOSEBRACKET:
+        if (c==" ") {
+          continue;
+        } else if (c!=")") {
+          throw "No CLOSE Bracket";
+        } else {
+          if (operator=="define") {
+            definitions[identifier] = arguments[0];
+            shouldExit = true;
+          }
+        }
+        break;
+      default:
+        break;
+    }
+    
+    if (shouldExit) break;
+  }
+  
+  
+}
+
+</script>
+
+</body>
+</html>
