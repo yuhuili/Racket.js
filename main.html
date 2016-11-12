@@ -33,22 +33,21 @@ var functions = {};
 var builtInFuncInf = ["+", "-", "/", "*"];
 var builtInFuncBin = ["remainder", "quotient"];
 var steps = [];
-var firstStep = 0;
+//var firstStep = 0;
 
 function e(block) {
   return myProcess(block);
 }
 
 function myProcess(block){
-  var result = process(block, "", "");
+  var result = process(block, "", "", 0);
   if (result != null){
-    addStep(result);
+    addStep(result, 0);
   }
-  firstStep = steps.length;
   return steps;
 }
 
-function process(block, frontTxt, backTxt) {
+function process(block, frontTxt, backTxt, firstStep) {
   
   var thisBlockType = BlockType.UNKNOWN;
   var thisProgressStage = ProgressStage.OPENBRACKET;
@@ -71,8 +70,8 @@ function process(block, frontTxt, backTxt) {
     
     var c = block[i];
     
-    console.log(c);
-    console.log(thisProgressStage);
+    //console.log(c);
+    //console.log(thisProgressStage);
     
     var shouldExit = false;
     
@@ -91,7 +90,7 @@ function process(block, frontTxt, backTxt) {
           if (operator.length==0) {
             continue;
           } else {
-            console.log("op"+operator);
+            //console.log("op"+operator);
             // Found operator
             if (operator=="define") {
               thisProgressStage = ProgressStage.IDENTIFIER;
@@ -181,27 +180,27 @@ function process(block, frontTxt, backTxt) {
           } else if (numOpenBrack > 0) {
             arguments[currentArgument] += c;
           } else {
-            console.log("currentarg" + arguments[currentArgument]);
+            //console.log("currentarg" + arguments[currentArgument]);
             
             if (thisBlockType == BlockType.DEFINEFUNC) {
-              addStep(frontTxt + block + backTxt);
+              addStep(frontTxt + block + backTxt, firstStep);
               currentArgument++;
               numberOfArguments--;
               continue;
             }
             
             if (arguments[currentArgument][0] == "("){
-              addStep(frontTxt + block + backTxt);
+              addStep(frontTxt + block + backTxt, firstStep);
               var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.DEFINEFUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
               var newback = block.substring(i)+backTxt;
-              arguments[currentArgument] = process(arguments[currentArgument], newfront, newback);
-              addStep(newfront+arguments[currentArgument]+newback);
+              arguments[currentArgument] = process(arguments[currentArgument], newfront, newback, steps.length-1);
+              addStep(newfront+arguments[currentArgument]+newback, firstStep);
             } else if (isNaN(arguments[currentArgument])){
-              addStep(frontTxt + block + backTxt);
+              addStep(frontTxt + block + backTxt, firstStep);
               arguments[currentArgument] = processDefinition(arguments[currentArgument]);
               var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.DEFINEFUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
               var newback = block.substring(i)+backTxt;
-              addStep(newfront+arguments[currentArgument]+newback);
+              addStep(newfront+arguments[currentArgument]+newback, firstStep);
             }
             currentArgument++;
             numberOfArguments--;
@@ -214,27 +213,27 @@ function process(block, frontTxt, backTxt) {
             numOpenBrack--;
             arguments[currentArgument] += c;
           }else { 
-            console.log(arguments[currentArgument]);
+            //console.log(arguments[currentArgument]);
             
             if (thisBlockType == BlockType.DEFINEFUNC) {
-              addStep(frontTxt + block + backTxt);
+              addStep(frontTxt + block + backTxt, firstStep);
               i--;
               thisProgressStage = ProgressStage.CLOSEBRACKET;
               continue;
             }
             
             if (arguments[currentArgument][0] == "("){
-              addStep(frontTxt + block + backTxt);
+              addStep(frontTxt + block + backTxt, firstStep);
               var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.DEFINEFUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
               var newback = block.substring(i)+backTxt;
-              arguments[currentArgument] = process(arguments[currentArgument], newfront, newback);
-              addStep(newfront+arguments[currentArgument]+newback);
+              arguments[currentArgument] = process(arguments[currentArgument], newfront, newback, steps.length-1);
+              addStep(newfront+arguments[currentArgument]+newback, firstStep);
             }else if (isNaN(arguments[currentArgument])){
-              addStep(frontTxt + block + backTxt);
+              addStep(frontTxt + block + backTxt, firstStep);
               arguments[currentArgument] = processDefinition(arguments[currentArgument]);
               var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.DEFINEFUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
               var newback = block.substring(i)+backTxt;
-              addStep(newfront+arguments[currentArgument]+newback);
+              addStep(newfront+arguments[currentArgument]+newback,firstStep);
             }            
             i--;
             thisProgressStage = ProgressStage.CLOSEBRACKET;
@@ -251,7 +250,7 @@ function process(block, frontTxt, backTxt) {
         } else if (c!=")") {
           throw "No CLOSE Bracket";
         } else {
-          console.log("AAAAA"+thisBlockType);
+          //console.log("AAAAA"+thisBlockType);
           switch (thisBlockType){
             case BlockType.DEFINE:
               definitions[identifier] = !isNaN(arguments[0]) ? arguments[0] : ((arguments[0].indexOf(".") > -1) ? parseFloat(arguments[0]) : parseInt(arguments[0]));
@@ -268,7 +267,7 @@ function process(block, frontTxt, backTxt) {
               break;
             case BlockType.FUNC:
               
-              addStep(frontTxt + block + backTxt);
+              addStep(frontTxt + block + backTxt, firstStep);
               
               var rawBody = functions[operator]["body"];
               var funcArgs = functions[operator]["parameters"];
@@ -278,9 +277,9 @@ function process(block, frontTxt, backTxt) {
                 rawBody = rawBody.replace(reg, "$1"+arguments[j]+"$2");
               }
               
-              addStep(frontTxt + rawBody + backTxt);
+              addStep(frontTxt + rawBody + backTxt, firstStep);
               
-              return process(rawBody, frontTxt, backTxt);
+              return process(rawBody, frontTxt, backTxt, steps.length-1);
               break;
             case BlockType.LIST:
               
@@ -475,7 +474,8 @@ function constructFront (operator, ident, arg){
   return str;
 }
 // logs the step; if step is present previously, does not log
-function addStep (step){
+function addStep (step, firstStep){
+  console.log("steps" + step + " " + firstStep);
   if (steps.length == 0){
     steps.push(step);
   }
