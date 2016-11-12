@@ -11,9 +11,10 @@
 
 var BlockType = {
   UNKNOWN: 0,
-  DEFINE: 1,
-  BUILTINBIN: 2,
-  BUILTININF: 3
+  DEFINE: 1, // regular definition
+  FUNC: 2, // DEFINE FUNCTION
+  BUILTINBIN: 3,
+  BUILTININF: 4
 };
 
 var ProgressStage = {
@@ -29,6 +30,7 @@ var rString = "(define x 4)";
 
 
 var definitions = {};
+var functions = {};
 var builtInFuncInf = ["+", "-", "/", "*"];
 var builtInFuncBin = ["remainder", "quotient"];
 var steps = [];
@@ -50,8 +52,13 @@ function process(block, frontTxt, backTxt) {
   
   
   var operator = "";
-  var identifier = "";
+  var identifier = ""; // one thing by itself
+  var parameters = []; // include function name itself
+  var currentParameter = 0;
+  
   var arguments = [];
+  
+  var identifierHasBracket = false;
   
   var currentArgument = 0;
   var numberOfArguments = 0;
@@ -71,7 +78,7 @@ function process(block, frontTxt, backTxt) {
         if (c==" ") {
           continue;
         } else if (c!="(") {
-          return processDefinition(block.substring(i));          
+          return processDefinition(block.substring(i), false);          
         } else {
           thisProgressStage = ProgressStage.OPERATOR;
         }
@@ -103,14 +110,45 @@ function process(block, frontTxt, backTxt) {
         }
         break;
       case ProgressStage.IDENTIFIER:
-        if (c==" ") {
-          if (identifier.length==0) {
-            continue;
+      
+        if (identifierHasBracket) {
+          if (parameters.length==currentParameter) {
+            parameters[currentParameter]="";
+          }
+        }
+        
+        if (c=="(") {
+          identifierHasBracket = true;
+        }
+        else if (c==" ") {
+          if (identifierHasBracket) {
+            if (parameters[currentParameter].length==0) {
+              continue;
+            } else {
+              currentParameter++;
+            }
           } else {
+            if (identifier.length==0) {
+              continue;
+            } else {
+              thisProgressStage = ProgressStage.ARGUMENT;
+            }
+          }
+        } else if (c==")") {
+          // assume it is a function
+          // finished all parameters
+          if (parameters.length<=1) {
+            throw "Invalid function";
+          } else {
+            thisBlockType = BlockType.FUNC;
             thisProgressStage = ProgressStage.ARGUMENT;
           }
         } else {
-          identifier += c;
+          if (identifierHasBracket) {
+            parameters[currentParameter] += c;
+          } else {
+            identifier += c;
+          }
         }
         break;
       case ProgressStage.ARGUMENT:
@@ -131,17 +169,16 @@ function process(block, frontTxt, backTxt) {
             arguments[currentArgument] += c;
           } else {
             console.log("currentarg" + arguments[currentArgument]);
-            // TO DO: CHECK IF VALUE, IF NOT EVALUATE IT
             if (arguments[currentArgument][0] == "("){
               addStep(frontTxt + block + backTxt);
-              var newfront = frontTxt+constructFront(operator, identifier, arguments.slice(0,arguments.length-1));
+              var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.FUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
               var newback = block.substring(i)+backTxt;
               arguments[currentArgument] = process(arguments[currentArgument], newfront, newback);
               addStep(newfront+arguments[currentArgument]+newback);
             } else if (isNaN(arguments[currentArgument])){
               addStep(frontTxt + block + backTxt);
               arguments[currentArgument] = processDefinition(arguments[currentArgument]);
-              var newfront = frontTxt+constructFront(operator, identifier, arguments.slice(0,arguments.length-1));
+              var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.FUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
               var newback = block.substring(i)+backTxt;
               addStep(newfront+arguments[currentArgument]+newback);
             }
@@ -159,14 +196,14 @@ function process(block, frontTxt, backTxt) {
             console.log(arguments[currentArgument]);
             if (arguments[currentArgument][0] == "("){
               addStep(frontTxt + block + backTxt);
-              var newfront = frontTxt+constructFront(operator, identifier, arguments.slice(0,arguments.length-1));
+              var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.FUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
               var newback = block.substring(i)+backTxt;
               arguments[currentArgument] = process(arguments[currentArgument], newfront, newback);
               addStep(newfront+arguments[currentArgument]+newback);
             }else if (isNaN(arguments[currentArgument])){
               addStep(frontTxt + block + backTxt);
               arguments[currentArgument] = processDefinition(arguments[currentArgument]);
-              var newfront = frontTxt+constructFront(operator, identifier, arguments.slice(0,arguments.length-1));
+              var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.FUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
               var newback = block.substring(i)+backTxt;
               addStep(newfront+arguments[currentArgument]+newback);
             }            
@@ -189,6 +226,9 @@ function process(block, frontTxt, backTxt) {
             case BlockType.DEFINE:
               definitions[identifier] = !isNaN(arguments[0]) ? arguments[0] : ((arguments[0].indexOf(".") > -1) ? parseFloat(arguments[0]) : parseInt(arguments[0]));
               //return definitions[identifier];
+              break;
+            case BlockType.FUNC:
+              functions[identifier] = {"parameters": parameters, "body": arguments[0]};
               break;
             case BlockType.BUILTINBIN:
               return processBuiltInBin(operator, arguments);
@@ -356,6 +396,16 @@ function processDefinition(block){
   else {
     throw "Undefined Variable";
   }
+}
+
+function constructIdentifier (parameters) {
+  var str = "(";
+  for (var i=0; i<parameters.length; i++) {
+    str += parameters[i] + " ";
+  }
+  str = str.substring(0, str.length-1);
+  str += ")";
+  return str;
 }
 // construct the function def'n until the arg that you're processing
 function constructFront (operator, ident, arg){
