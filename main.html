@@ -12,9 +12,10 @@
 var BlockType = {
   UNKNOWN: 0,
   DEFINE: 1, // regular definition
-  FUNC: 2, // DEFINE FUNCTION
+  DEFINEFUNC: 2, // DEFINE FUNCTION
   BUILTINBIN: 3,
-  BUILTININF: 4
+  BUILTININF: 4,
+  FUNC: 5
 };
 
 var ProgressStage = {
@@ -25,9 +26,6 @@ var ProgressStage = {
   CLOSEBRACKET: 4,
   CLEANUP: 5
 }
-
-var rString = "(define x 4)";
-
 
 var definitions = {};
 var functions = {};
@@ -78,7 +76,7 @@ function process(block, frontTxt, backTxt) {
         if (c==" ") {
           continue;
         } else if (c!="(") {
-          return processDefinition(block.substring(i), false);          
+          return processDefinition(block.substring(i));          
         } else {
           thisProgressStage = ProgressStage.OPERATOR;
         }
@@ -102,6 +100,12 @@ function process(block, frontTxt, backTxt) {
               thisBlockType = BlockType.BUILTININF;
               thisProgressStage = ProgressStage.ARGUMENT;
               numberOfArguments = -1;
+            } else if (operator in functions) {
+              thisBlockType = BlockType.FUNC;
+              thisProgressStage = ProgressStage.ARGUMENT;
+              numberOfArguments = functions[operator]["parameters"].length;
+            } else {
+              throw "Undefined function";
             }
             
           }
@@ -140,7 +144,7 @@ function process(block, frontTxt, backTxt) {
           if (parameters.length<=1) {
             throw "Invalid function";
           } else {
-            thisBlockType = BlockType.FUNC;
+            thisBlockType = BlockType.DEFINEFUNC;
             thisProgressStage = ProgressStage.ARGUMENT;
           }
         } else {
@@ -169,16 +173,24 @@ function process(block, frontTxt, backTxt) {
             arguments[currentArgument] += c;
           } else {
             console.log("currentarg" + arguments[currentArgument]);
+            
+            if (thisBlockType == BlockType.DEFINEFUNC) {
+              addStep(frontTxt + block + backTxt);
+              currentArgument++;
+              numberOfArguments--;
+              continue;
+            }
+            
             if (arguments[currentArgument][0] == "("){
               addStep(frontTxt + block + backTxt);
-              var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.FUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
+              var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.DEFINEFUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
               var newback = block.substring(i)+backTxt;
               arguments[currentArgument] = process(arguments[currentArgument], newfront, newback);
               addStep(newfront+arguments[currentArgument]+newback);
             } else if (isNaN(arguments[currentArgument])){
               addStep(frontTxt + block + backTxt);
               arguments[currentArgument] = processDefinition(arguments[currentArgument]);
-              var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.FUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
+              var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.DEFINEFUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
               var newback = block.substring(i)+backTxt;
               addStep(newfront+arguments[currentArgument]+newback);
             }
@@ -194,16 +206,24 @@ function process(block, frontTxt, backTxt) {
             arguments[currentArgument] += c;
           }else { 
             console.log(arguments[currentArgument]);
+            
+            if (thisBlockType == BlockType.DEFINEFUNC) {
+              addStep(frontTxt + block + backTxt);
+              i--;
+              thisProgressStage = ProgressStage.CLOSEBRACKET;
+              continue;
+            }
+            
             if (arguments[currentArgument][0] == "("){
               addStep(frontTxt + block + backTxt);
-              var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.FUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
+              var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.DEFINEFUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
               var newback = block.substring(i)+backTxt;
               arguments[currentArgument] = process(arguments[currentArgument], newfront, newback);
               addStep(newfront+arguments[currentArgument]+newback);
             }else if (isNaN(arguments[currentArgument])){
               addStep(frontTxt + block + backTxt);
               arguments[currentArgument] = processDefinition(arguments[currentArgument]);
-              var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.FUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
+              var newfront = frontTxt+constructFront(operator, thisBlockType == BlockType.DEFINEFUNC ? constructIdentifier(parameters) : identifier, arguments.slice(0,arguments.length-1));
               var newback = block.substring(i)+backTxt;
               addStep(newfront+arguments[currentArgument]+newback);
             }            
@@ -222,19 +242,36 @@ function process(block, frontTxt, backTxt) {
         } else if (c!=")") {
           throw "No CLOSE Bracket";
         } else {
+          console.log("AAAAA"+thisBlockType);
           switch (thisBlockType){
             case BlockType.DEFINE:
               definitions[identifier] = !isNaN(arguments[0]) ? arguments[0] : ((arguments[0].indexOf(".") > -1) ? parseFloat(arguments[0]) : parseInt(arguments[0]));
               //return definitions[identifier];
               break;
-            case BlockType.FUNC:
-              functions[identifier] = {"parameters": parameters, "body": arguments[0]};
+            case BlockType.DEFINEFUNC:
+              functions[parameters[0]] = {"parameters": parameters.slice(1,parameters.length), "body": arguments[0]};
               break;
             case BlockType.BUILTINBIN:
               return processBuiltInBin(operator, arguments);
               break;
             case BlockType.BUILTININF:
               return processBuiltInInf(operator, arguments);
+              break;
+            case BlockType.FUNC:
+              
+              addStep(frontTxt + block + backTxt);
+              
+              var rawBody = functions[operator]["body"];
+              var funcArgs = functions[operator]["parameters"];
+              
+              for (var j=0; j<funcArgs.length; j++) {
+                var reg = new RegExp("([( ])"+funcArgs[j]+"([ )])");
+                rawBody = rawBody.replace(reg, "$1"+arguments[j]+"$2");
+              }
+              
+              addStep(frontTxt + rawBody + backTxt);
+              
+              return process(rawBody);
               break;
           }
         }
