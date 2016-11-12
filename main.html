@@ -61,7 +61,7 @@ function process(block) {
         if (c==" ") {
           continue;
         } else if (c!="(") {
-          throw "No Open Bracket";
+          return processDefinition(block.substring(i));          
         } else {
           thisProgressStage = ProgressStage.OPERATOR;
         }
@@ -140,7 +140,7 @@ function process(block) {
         } else {
           switch (thisBlockType){
             case BlockType.DEFINE:
-              definitions[identifier] = arguments[0];
+              definitions[identifier] = (arguments[0].indexOf(".") > -1) ? parseFloat(arguments[0]) : parseInt(arguments[0]);
               shouldExit = true;
               break;
             case BlockType.BUILTINBIN:
@@ -149,10 +149,6 @@ function process(block) {
             case BlockType.BUILTININF:
               return processBuiltInInf(operator, arguments);
               break;
-          }
-          if (thisBlockType == BlockType.DEFINE) {
-            definitions[identifier] = arguments[0];
-            shouldExit = true;
           }
         }
         break;
@@ -287,6 +283,28 @@ function processBuiltInInf(operator, arguments){
     }
     
     return base;
+  }
+}
+function processDefinition(block){
+  var def ="";
+  var seenBlank = false;
+  for (var i = 0; i < block.length; i++){
+    c = block[i];
+    if (c == " ") seenBlank = true;
+    else{
+      if (seenBlank){
+        throw "Syntax Error";
+      }
+      else{
+        def += c;
+      }
+    }
+  }
+  if (def in definitions){
+    return definitions[def];
+  }
+  else {
+    throw "Undefined Variable";
   }
 }
 
