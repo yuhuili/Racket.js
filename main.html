@@ -124,6 +124,10 @@ function process(block, frontTxt, backTxt, firstStep) {
             
           }
         } else {
+          //console.log(i+" "+(block.length-1)+" "+operator+" "+c);
+          if (i == block.length-1 && operator == "list" && c == ")"){
+            return "(list)";
+          }
           operator += c;
         }
         break;
@@ -445,7 +449,6 @@ function processListFunc(operator, list){
           continue;
         } else if (numOpenBrack == 0){
           if (currentElem == 1){
-            console.log(elements[1]);
             return elements[1];
           }
           currentElem++;
@@ -458,28 +461,29 @@ function processListFunc(operator, list){
       }else if (c == ")"){
         numOpenBrack--;
         elements[currentElem] += c;
-        if (i == list.length-1){
+        if (i == list.length-2){
           if (numOpenBrack != 0){
             throw "Syntax Error";
           } else {
             if (elements.length == 1){
-              throw "first list given empty";
+              throw "insufficient number of elements";
             } else {
               return elements[1];
             }
           }
         }
       }else {
-        if (i == list.length-1){
+        elements[currentElem] += c;
+        if (i == list.length-2){
           if (elements.length == 1){
             throw "first list given empty";
           } else {
             return elements[1];
           }
         }
-        elements[currentElem] += c;
       }
     }
+    throw "Insufficient number of elements";
   } else if (operator == "second"){
     
   } else if (operator == "rest"){
@@ -540,7 +544,7 @@ function constructFront (operator, ident, arg){
 }
 // logs the step; if step is present previously, does not log
 function addStep (step, firstStep){
-  console.log("steps" + step + " " + firstStep);
+  //console.log("steps" + step + " " + firstStep);
   if (steps.length == 0){
     steps.push(step);
   }
