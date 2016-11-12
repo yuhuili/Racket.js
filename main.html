@@ -198,6 +198,34 @@ function processBuiltInBin(operator, arguments){
     }
   }
 }
+function processBuiltInInf(operator, arguments){
+
+  if (operator == "+") {
+    var base = 0;
+    for (int i = 0; i < arguments.length; i++){
+      var af = parseFloat(arguments[i]);
+      if (!isNaN(arguments[i])){
+        base += af;
+      } else{
+        throw "Invalid Argument Type";
+      }
+    }
+    return base;
+  }
+  
+  if (operator == "*") {
+    var base = 1;
+    for (int i = 0; i < arguments.length; i++){
+      var af = parseFloat(arguments[i]);
+      if (!isNaN(arguments[i])){
+        base *= af;
+      } else{
+        throw "Invalid Argument Type";
+      }
+    }
+    return base;
+  }
+}
 
 </script>
 
