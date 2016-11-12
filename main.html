@@ -11,7 +11,9 @@
 
 var BlockType = {
   UNKNOWN: 0,
-  FUNC: 1
+  DEFINE: 1,
+  BUILTINBIN: 2,
+  BUILTININF: 3
 };
 
 var ProgressStage = {
@@ -27,6 +29,8 @@ var rString = "(define x 4)";
 
 
 var definitions = {};
+var builtInFuncInf = ["+", "-", "/", "*"];
+var builtInFuncBin = ["remainder", "quotient"];
 
 
 function process(block) {
@@ -72,13 +76,20 @@ function process(block) {
             if (operator=="define") {
               thisProgressStage = ProgressStage.IDENTIFIER;
               numberOfArguments = 1;
+              thisBlockType = BlockType.DEFINE;
               
               for (var j=0; j<numberOfArguments; j++) {
                 arguments[j]="";
               }
               
-            } else {
-              
+            } else if (operator in builtInFuncBin) {
+              thisBlockType = BlockType.BUILTINBIN;
+              thisProgressStage = ProgressStage.ARGUMENT;
+              numberOfArguments = 2;
+            } else if (operator in builtInFuncInf) {
+              thisBlockType = BlockType.BUILTININF;
+              thisProgressStage = ProgressStage.ARGUMENT;
+              numberOfArguments = -1;
             }
             
           }
@@ -128,7 +139,19 @@ function process(block) {
         } else if (c!=")") {
           throw "No CLOSE Bracket";
         } else {
-          if (operator=="define") {
+          switch (thisBlockType){
+            case BlockType.DEFINE:
+              definitions[identifier] = arguments[0];
+              shouldExit = true;
+              break;
+            case BlockType.BUILTINBIN:
+              processBuiltInBin(operator, arguments);
+              break;
+            case BlockType.BUILTININF:
+              processBuiltInInf(operator, arguments);
+              break;
+          }
+          if (thisBlockType == BlockType.DEFINE) {
             definitions[identifier] = arguments[0];
             shouldExit = true;
           }
@@ -142,6 +165,38 @@ function process(block) {
   }
   
   
+}
+function processBuiltInBin(operator, arguments){
+  if (operator == "remainder"){
+    var a00 = parseInt(arguments[0]);
+    var a10 = parseInt(arguments[1]);
+    var a01 = parseFloat(arguments[0]);
+    var a11 = parseFloat(arguments[1]);
+    if (!isNaN(arguments[0]) && !isNaN(arguments[1]) && a00 == a01 && a10 == a11){
+      if (a1 == 0){
+        throw "Division By Zero";
+      } else {
+         return arguments[0]%arguments[1];
+      }
+    } else {
+      throw "Invalid Arguments";
+    }
+    
+  } else if (operator == "quotient"){
+    var a00 = parseInt(arguments[0]);
+    var a10 = parseInt(arguments[1]);
+    var a01 = parseFloat(arguments[0]);
+    var a11 = parseFloat(arguments[1]);
+    if (!isNaN(arguments[0]) && !isNaN(arguments[1]) && a00 == a01 && a10 == a11){
+      if (a1 == 0){
+        throw "Division By Zero";
+      } else {
+         return Math.floor(arguments[0]/arguments[1]);
+      }
+    } else {
+      throw "Invalid Arguments";
+    }
+  }
 }
 
 </script>
