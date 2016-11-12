@@ -71,22 +71,17 @@ function process(block) {
           if (operator.length==0) {
             continue;
           } else {
-            
+            console.log("op"+operator);
             // Found operator
             if (operator=="define") {
               thisProgressStage = ProgressStage.IDENTIFIER;
               numberOfArguments = 1;
               thisBlockType = BlockType.DEFINE;
-              
-              for (var j=0; j<numberOfArguments; j++) {
-                arguments[j]="";
-              }
-              
-            } else if (operator in builtInFuncBin) {
+            } else if (builtInFuncBin.indexOf(operator) > -1) {
               thisBlockType = BlockType.BUILTINBIN;
               thisProgressStage = ProgressStage.ARGUMENT;
               numberOfArguments = 2;
-            } else if (operator in builtInFuncInf) {
+            } else if (builtInFuncInf.indexOf(operator) > -1) {
               thisBlockType = BlockType.BUILTININF;
               thisProgressStage = ProgressStage.ARGUMENT;
               numberOfArguments = -1;
@@ -114,6 +109,10 @@ function process(block) {
           thisProgressStage = ProgressStage.CLOSEBRACKET;
           break;
         } 
+        
+        if (arguments.length==currentArgument) {
+          arguments[currentArgument]="";
+        }
         
         if (c==" ") {
           if (arguments[currentArgument].length==0) {
@@ -145,10 +144,10 @@ function process(block) {
               shouldExit = true;
               break;
             case BlockType.BUILTINBIN:
-              processBuiltInBin(operator, arguments);
+              return processBuiltInBin(operator, arguments);
               break;
             case BlockType.BUILTININF:
-              processBuiltInInf(operator, arguments);
+              return processBuiltInInf(operator, arguments);
               break;
           }
           if (thisBlockType == BlockType.DEFINE) {
