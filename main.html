@@ -15,7 +15,8 @@ var BlockType = {
   DEFINEFUNC: 2, // DEFINE FUNCTION
   BUILTINBIN: 3,
   BUILTININF: 4,
-  FUNC: 5
+  FUNC: 5,
+  LIST: 6
 };
 
 var ProgressStage = {
@@ -96,6 +97,10 @@ function process(block, frontTxt, backTxt) {
               thisProgressStage = ProgressStage.IDENTIFIER;
               numberOfArguments = 1;
               thisBlockType = BlockType.DEFINE;
+            } else if (operator == "list") {
+              thisProgressStage = ProgressStage.ARGUMENT;
+              numberOfArguments = -1;
+              thisBlockType = BlockType.LIST;
             } else if (builtInFuncBin.indexOf(operator) > -1) {
               thisBlockType = BlockType.BUILTINBIN;
               thisProgressStage = ProgressStage.ARGUMENT;
@@ -276,6 +281,10 @@ function process(block, frontTxt, backTxt) {
               addStep(frontTxt + rawBody + backTxt);
               
               return process(rawBody, frontTxt, backTxt);
+              break;
+            case BlockType.LIST:
+              
+              return constructList(arguments);
               break;
           }
         }
@@ -473,6 +482,14 @@ function addStep (step){
   else if (steps[firstStep] != step && steps[steps.length-1] != step){
     steps.push(step);
   }
+}
+function constructList(arguments){
+  var str = "(list ";
+  for (var i = 0; i < arguments.length; i++){
+    str += arguments[i] + " ";
+  }
+  str = str.substring(0, str.length-1);
+  return str+")";
 }
 
 </script>
