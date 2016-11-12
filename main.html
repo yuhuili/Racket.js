@@ -202,7 +202,7 @@ function processBuiltInInf(operator, arguments){
 
   if (operator == "+") {
     var base = 0;
-    for (int i = 0; i < arguments.length; i++){
+    for (var i = 0; i < arguments.length; i++){
       var af = parseFloat(arguments[i]);
       if (!isNaN(arguments[i])){
         base += af;
@@ -212,10 +212,38 @@ function processBuiltInInf(operator, arguments){
     }
     return base;
   }
-  
-  if (operator == "*") {
+  else if (operator == "-") {
+    
+    var base = 0;
+    
+    if (arguments.length==0) {
+      throw "- expects at least 1 argument";
+    } else if (arguments.length==1) {
+      if (isNaN(arguments[0])) {
+        throw "Not a number";
+      }
+      return -parseFloat(arguments[0]);
+    }
+    
+    for (var i = 0; i < arguments.length; i++) {
+      if (isNaN(arguments[i])) {
+        throw "Not a number"
+      }
+      
+      var ai = parseFloat(arguments[i]);
+      
+      if (i==0) {
+        base = ai;
+      } else {
+        base -= ai;
+      }
+    }
+    
+    return base;
+  }
+  else if (operator == "*") {
     var base = 1;
-    for (int i = 0; i < arguments.length; i++){
+    for (var i = 0; i < arguments.length; i++){
       var af = parseFloat(arguments[i]);
       if (!isNaN(arguments[i])){
         base *= af;
@@ -223,6 +251,42 @@ function processBuiltInInf(operator, arguments){
         throw "Invalid Argument Type";
       }
     }
+    return base;
+  }
+  else if (operator == "/") {
+    
+    var base = 1;
+    
+    
+    if (arguments.length==0) {
+      throw "/ expects at least 1 argument";
+    }
+    else if (arguments.length==1) {
+      if (isNaN(arguments[0])) {
+        throw "Not a number";
+      } else if (parseFloat(arguments[0])==0) {
+        throw "Division By Zero";
+      }
+      return base/parseFloat(arguments[0]);
+    }
+    
+    for (var i = 0; i < arguments.length; i++) {
+      if (isNaN(arguments[i])) {
+        throw "Not a number"
+      }
+      
+      var ai = parseFloat(arguments[i]);
+      
+      if (i==0) {
+        base = ai;
+      } else {
+        if (ai==0) {
+          throw "Division By Zero";
+        }
+        base = base/ai;
+      }
+    }
+    
     return base;
   }
 }
