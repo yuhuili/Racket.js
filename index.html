@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Racket.js</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="jumbotron-narrow.css" rel="stylesheet">
+    <style>
+    #steps-wrap {
+      margin: 20px 0;
+      font-size:16px;
+      padding: 10px 10px 15px 10px;
+    }
+    #steps {
+      border: 1px #00A816 solid;
+      font-size:16px;
+      margin: 10px 0 16px 0;
+      padding: 13px 10px;
+    }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="/logic.js"></script>
+    <script src="/animation.js"></script>
+  </head>
+
+  <body>
+
+    <div class="container">
+      <div class="header clearfix">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation" class="active"><a href="#">Home</a></li>
+            <li role="presentation"><a href="https://github.com/yuhuili/HackPrinceton2016" target="_blank">GitHub</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">Racket.js</h3>
+      </div>
+
+      <div class="jumbotron">
+        <img src="/RacketJS.png" style="max-width:200px; position:block; margin: 0 auto;">
+        <h2>Racket Interpreter in JavaScript</h2>
+        <p class="lead">A simple racket interpreter written in Javascript that supports basic racket features, with a built-in stepper that helps you see how the code is interpreted. Give it a try today!</p>
+        <textarea class="form-control" rows="10" id="code" placeholder="(define (f x y) (+ x y))\n(f 1 8)" style="margin-bottom: 14px;"></textarea>
+        <button id="run" type="button" class="btn-block btn btn-success" style="font-size:16px">Run</button>
+        <div id="steps-wrap" class="row" style="display:none">
+          <div id="steps" class="row">
+          </div>
+          <button id="previousStep" type="button" class="btn btn-success" style="font-size:16px">Previous</button>
+          <button id="nextStep" type="button" class="btn btn-success" style="font-size:16px">Next</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-left:0; margin-right:0; text-align:center">
+        Supported: define, cond, +, -, *, /, quotient, remainder, first, second, third, rest, empty? zero? (list ...)
+      </div>
+
+      <footer class="footer">
+        <p style="text-align:center">Created @ Hack Princeton Fall 2016</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+    <script>
+      var textAreas = document.getElementsByTagName('textarea');
+
+      Array.prototype.forEach.call(textAreas, function(elem) {
+          elem.placeholder = elem.placeholder.replace(/\\n/g, '\n');
+      });
+    </script>
+  </body>
+</html>
