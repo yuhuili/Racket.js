@@ -35,7 +35,7 @@ function e(block) {
 }
 
 function myProcess(block){
-  var result = process(block, "", "", 0);
+  var result = process(block, "", "", steps.length);
   if (result != null){
     addStep(result, 0);//console.log("Al 51"+result);
   }
@@ -210,7 +210,7 @@ function process(block, frontTxt, backTxt, firstStep) {
                 
                 if (arguments[currentArgument][0] == "(" ){
                   console.log("ABAB");
-                  arguments[currentArgument] = process(arguments[currentArgument], frontTxt, backTxt); console.log("BBB "+frontTxt+"----"+backTxt);
+                  arguments[currentArgument] = process(arguments[currentArgument], frontTxt, backTxt, steps.length-1); console.log("BBB "+frontTxt+"----"+backTxt);
                   addStep(frontTxt+arguments[currentArgument]+backTxt, firstStep); console.log("CCC ");
                 }
                 
@@ -272,7 +272,7 @@ function process(block, frontTxt, backTxt, firstStep) {
                 
                 if (arguments[currentArgument][0] == "(" ){
                   console.log("ABAB");
-                  arguments[currentArgument] = process(arguments[currentArgument], frontTxt, backTxt); console.log("BBB "+frontTxt+"----"+backTxt);
+                  arguments[currentArgument] = process(arguments[currentArgument], frontTxt, backTxt, steps.length-1); console.log("BBB "+frontTxt+"----"+backTxt);
                   addStep(frontTxt+arguments[currentArgument]+backTxt, firstStep); console.log("CCC ");
                 }
                 
@@ -455,7 +455,7 @@ function processBuiltInInf(operator, arguments){
     for (var i = 0; i < arguments.length; i++){
       //console.log("CRAZYTHING "+ arguments[i]+ " " + typeof(arguments[i]));
       if (typeof(arguments[i]) === 'string'){
-        console.log("PR 453 "+arguments[i]+"+++ +++ ");arguments[i] = process(arguments[i], "", "");
+        console.log("PR 453 "+arguments[i]+"+++ +++ ");arguments[i] = process(arguments[i], "", "",steps.length-1);
       }
       //console.log("CRAZYTHINGAFTER "+ arguments[i]);
       var af = parseFloat(arguments[i]);
@@ -632,7 +632,7 @@ function processCond(qa, frontTxt, backTxt){
           if (numOpenBrack == 0){
             asked = true;
             //console.log("question "+question);
-            console.log("PR 630 "+question+"++++++"+frontTxt+"("+"++++"+qa.substring(i)+backTxt);var result = process(question, frontTxt+"(", qa.substring(i)+backTxt);
+            console.log("PR 630 "+question+"++++++"+frontTxt+"("+"++++"+qa.substring(i)+backTxt);var result = process(question, frontTxt+"(", qa.substring(i)+backTxt,steps.length-1);
             if (result === true){
               continue;
             } else if (result === false){
@@ -680,7 +680,7 @@ function processCond(qa, frontTxt, backTxt){
         if (numOpenBrack == 0){
           asked = true;
           //console.log("question " + question);
-          console.log("PR 678 "+question+"++++"+frontTxt+"("+"+++++"+qa.substring(i+1)+backTxt);var result = process(question, frontTxt+"(", qa.substring(i+1)+backTxt);
+          console.log("PR 678 "+question+"++++"+frontTxt+"("+"+++++"+qa.substring(i+1)+backTxt);var result = process(question, frontTxt+"(", qa.substring(i+1)+backTxt,steps.length-1);
             if (result === true){
               continue; 
             } else if (result === false){
@@ -798,7 +798,7 @@ function constructFront (operator, ident, arg){
 }
 // logs the step; if step is present previously, does not log
 function addStep (step, firstStep){
-  console.log("steps" + step + " " + firstStep);
+  console.log("steps" + step + " " + "FIRSTSTEP: "+firstStep);
   if (steps.length == 0){
     steps.push(step);
   }
