@@ -24,18 +24,30 @@ function animateStep (mysteps){
   previousStep.addEventListener("click", function(){
     if(whichStep > 0){
       whichStep--;
-      steps.innerHTML =  mysteps[whichStep];
+      $("#steps").fadeOut(800, function(){
+        steps.innerHTML = mysteps[whichStep];
+        $("#steps").fadeIn();
+      });
     }else{
-      steps.innerHTML = "No more previous steps";
+      $("#steps").fadeOut(800, function(){
+        steps.innerHTML = "No more previous Steps";
+        $("#steps").fadeIn();
+      });
     }
   });
   
   nextStep.addEventListener("click", function(){
     if(whichStep < mysteps.length-1){
       whichStep++;
-      steps.innerHTML = mysteps[whichStep];
+      $("#steps").fadeOut(800, function(){
+        steps.innerHTML = mysteps[whichStep];
+        $("#steps").fadeIn();
+      });
     }else{
-      steps.innerHTML = "All steps processed";
+      $("#steps").fadeOut(800, function(){
+        steps.innerHTML = "All steps processed";
+        $("#steps").fadeIn();
+      });
     }
   })
 }
