@@ -17,7 +17,8 @@ var BlockType = {
   BUILTININF: 4,
   FUNC: 5,
   LIST: 6,
-  LISTFUNC: 7
+  LISTFUNC: 7,
+  COND: 8
 };
 
 var ProgressStage = {
@@ -29,11 +30,11 @@ var ProgressStage = {
   CLEANUP: 5
 }
 
-var definitions = {};
+var definitions = {"else": true, "true": true, "false": false};
 var functions = {};
 var builtInFuncInf = ["+", "-", "/", "*"];
 var builtInFuncBin = ["remainder", "quotient"];
-var listBuiltIn = ["first", "second", "third", "rest"];
+var listBuiltIn = ["first", "second", "third", "rest", "empty?"];
 var listFuncMap = {"first": 1, "second": 2, "third": 3};
 var steps = [];
 //var firstStep = 0;
@@ -51,7 +52,7 @@ function myProcess(block){
 }
 
 function process(block, frontTxt, backTxt, firstStep) {
-  
+  console.log("block= "+block);
   var thisBlockType = BlockType.UNKNOWN;
   var thisProgressStage = ProgressStage.OPENBRACKET;
   
@@ -103,6 +104,10 @@ function process(block, frontTxt, backTxt, firstStep) {
               thisProgressStage = ProgressStage.ARGUMENT;
               numberOfArguments = -1;
               thisBlockType = BlockType.LIST;
+            } else if (operator == "cond") {
+              thisProgressStage = ProgressStage.ARGUMENT;
+              numberOfArguments = -1;
+              thisBlockType = BlockType.COND;
             } else if (listBuiltIn.indexOf(operator) > -1){
               thisProgressStage = ProgressStage.ARGUMENT;
               numberOfArguments = 1;
@@ -120,7 +125,7 @@ function process(block, frontTxt, backTxt, firstStep) {
               thisProgressStage = ProgressStage.ARGUMENT;
               numberOfArguments = functions[operator]["parameters"].length;
             } else {
-              throw "Undefined function";
+              throw "Undefined function " + operator;
             }
             
           }
@@ -175,7 +180,6 @@ function process(block, frontTxt, backTxt, firstStep) {
         }
         break;
       case ProgressStage.ARGUMENT:
-        
         if (numberOfArguments==0) {
           thisProgressStage = ProgressStage.CLOSEBRACKET;
           break;
@@ -198,6 +202,25 @@ function process(block, frontTxt, backTxt, firstStep) {
               currentArgument++;
               numberOfArguments--;
               continue;
+            } else if (thisBlockType == BlockType.COND) {
+              addStep(frontTxt + block + backTxt, firstStep);
+              
+              console.log("argument= " + arguments[currentArgument]);
+              
+              try {
+                arguments[currentArgument] = processCond(arguments[currentArgument]);
+              } catch (e) {
+                console.log("abc");
+                if (e == "false question"){
+                  arguments[currentArgument] = "";
+                  console.log("asdf");
+                  continue;
+                } else {
+                  throw e;
+                }
+              }
+              return frontTxt + arguments[currentArgument] + backTxt;
+              
             }
             
             if (arguments[currentArgument][0] == "("){
@@ -223,7 +246,7 @@ function process(block, frontTxt, backTxt, firstStep) {
           if (numOpenBrack > 0){
             numOpenBrack--;
             arguments[currentArgument] += c;
-          }else { 
+          } else { 
             //console.log(arguments[currentArgument]);
             
             if (thisBlockType == BlockType.DEFINEFUNC) {
@@ -231,6 +254,25 @@ function process(block, frontTxt, backTxt, firstStep) {
               i--;
               thisProgressStage = ProgressStage.CLOSEBRACKET;
               continue;
+            }else if (thisBlockType == BlockType.COND) {
+              addStep(frontTxt + block + backTxt, firstStep);
+              
+              console.log("argument= " + arguments[currentArgument]);
+              
+              try {
+                arguments[currentArgument] = processCond(arguments[currentArgument]);
+              } catch (e) {
+                console.log("abc");
+                if (e == "false question"){
+                  arguments[currentArgument] = "";
+                  console.log("asdf");
+                  continue;
+                } else {
+                  throw e;
+                }
+              }
+              return frontTxt + arguments[currentArgument] + backTxt;
+              
             }
             
             if (arguments[currentArgument][0] == "("){
@@ -531,6 +573,99 @@ function processListFunc(operator, list){
       }
     }
     throw "Insufficient number of elements";
+  }else if (operator == "empty?"){
+    if (list == "(list)"){
+      return true;
+    }
+    return false;
+  }
+}
+function processCond(qa){
+  var numOpenBrack = 0;
+  var asked = false;
+  
+  var question = "";
+  var answer = "";
+  console.log("QA= "+ qa);
+  for (var i = 1; i < qa.length-1; i++){
+    console.log(question + " " + answer + " " + i);
+    var c = qa[i];
+    if (c == " "){
+      if (!asked){
+        if (question.length == 0){
+          continue;
+        } else {
+          if (numOpenBrack == 0){
+            asked = true;
+            console.log("question "+question);
+            var result = process(question, "", "");
+            if (result === true){
+              continue;
+            } else if (result === false){
+              throw "false question";
+            } else {
+              throw "not boolean";
+            }
+          } else {
+            question += c;
+          }
+        }
+      } else {
+        console.log("hello1");
+        if (answer.length == 0){
+          continue;
+        } else {
+          if (numOpenBrack == 0){
+            console.log("answer " + answer);
+            return process(answer, "", "");
+          } else {
+            answer += c;
+          }
+        }
+      }
+    }else if (c == "("){
+      if (!asked){
+        question += c;
+        numOpenBrack++;
+      } else {
+        answer += c;
+        numOpenBrack++;
+      }
+    } else if (c == ")"){
+      if (!asked){
+        question += c;
+        numOpenBrack--;
+        if (numOpenBrack == 0){
+          asked = true;
+          console.log("question " + question);
+          var result = process(question, "", "");
+            if (result === true){
+              continue; 
+            } else if (result === false){
+              throw "false question";
+            } else {
+              throw "not boolean";
+            }
+        }
+      } else {
+        console.log("hello");
+        answer += c;
+        numOpenBrack--;
+        if (numOpenBrack == 0){
+          console.log("answer " + answer);
+          return process(answer, "", "");
+        }
+      }
+    } else {
+        if (!asked){
+          question += c;
+        } else {
+          answer += c;
+          if (i == qa.length-2){
+            return process(answer, "", "");
+          }
+        }
+    }
   }
 }
 // consumes a variable and finds value associated with varialbe
@@ -539,6 +674,9 @@ function processListFunc(operator, list){
 function processDefinition(block){
   var def ="";
   var seenBlank = false;
+  if (!isNaN(block)){
+    return block;
+  }
   for (var i = 0; i < block.length; i++){
     c = block[i];
     if (c == " ") seenBlank = true;
@@ -552,6 +690,7 @@ function processDefinition(block){
     }
   }
   if (def in definitions){
+    console.log("def= " + def);
     return definitions[def];
   }
   else {
