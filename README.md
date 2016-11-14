@@ -1,6 +1,8 @@
 # Racket.js
 Live at https://racketjs.com
 
+<a href="https://racketjs.com"><img src="GitHub/ss1.png" width="400"></a>
+
 Don't you hate it when we're given stepper questions on the CS exam? Don't you get frustrated when you have to step through all that messy recursion in the ugly UI of Dr Racket? Well Racket.js has come to save all first year university students whose CS course is taught in Racket. We have always wanted to create a cleaner and prettier UI of Racket's stepper, which eliminates all the useless code and only steps the code we want for us. Thus we decided to do this hack in Hack Princeton.
 
 ## What is Racket.js
