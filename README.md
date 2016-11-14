@@ -1,4 +1,6 @@
 # Racket.js
+Hack Princeton Fall 2016 Project created by ![Yuhui Li](https://githubtools.yuhuili.com/kagami/yuhuili/Yuhui%20Li/) ![Annie Zhou](https://githubtools.yuhuili.com/kagami/anniezhou08/Annie%20Zhou)
+
 Live at https://racketjs.com
 
 <a href="https://racketjs.com"><img src="GitHub/ss1.png" width="400"></a>
