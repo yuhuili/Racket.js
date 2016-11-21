@@ -35,6 +35,12 @@ function e(block) {
 }
 
 function myProcess(block){
+
+  if (!validBrackets(block)) {
+    alert("Invalid brackets");
+    return;
+  }
+  
   var result = process(block, "", "", steps.length);
   if (result != null){
     addStep(result, 0);//console.log("Al 51"+result);
@@ -813,4 +819,28 @@ function constructList(arguments){
   }
   str = str.substring(0, str.length-1);
   return str+")";
+}
+
+function validBrackets(txt) {
+  var stack = new Array();
+  
+  for (var i=0; i<txt.length; i++) {
+    var c = txt[i];
+    if (c=="(" || c=="[") {
+      stack.push(c);
+    } else if (c==")") {
+      if (stack.length==0) {
+        return false;
+      } else if (stack[stack.length-1]=="(") {
+        stack.pop();
+      }
+    } else if (c=="]") {
+      if (stack.length==0) {
+        return false;
+      } else if (stack[stack.length-1]=="[") {
+        stack.pop();
+      }
+    }
+  }
+  return stack.length == 0;
 }
